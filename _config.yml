@@ -9,3 +9,4 @@ header_pages:
   - blog.md
   - writeups.md
   - about.md
+permalink: /writeups/:title/
