@@ -158,7 +158,7 @@ cd /tmp/root_backup/
 cat root.txt
 ```
 
-![Root shell via rdiff-backup and reading root.txt](/ctf-writeups/assets/img/management-12.jpg)
+![Root shell via rdiff-backup and reading root.txt](/home/assets/img/management-12.jpg)
 
 
 * **Root Flag**: `33946f4ab402fa3c3ecf155a4b3985d4`
