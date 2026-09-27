@@ -133,3 +133,113 @@ a:hover {
   color: #79c0ff !important;
 }
 
+/* ===== Typography upgrade ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+code, pre, .highlight {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===== Smooth transitions everywhere ===== */
+a, .post-list > li {
+  transition: all 0.2s ease;
+}
+
+/* ===== Nav links get a subtle underline-grow effect ===== */
+.site-nav .page-link {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.site-nav .page-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #58a6ff;
+  transition: width 0.25s ease;
+}
+
+.site-nav .page-link:hover::after {
+  width: 100%;
+}
+
+/* ===== Post list becomes cards ===== */
+.post-list > li {
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: #0f1520;
+}
+
+.post-list > li:hover {
+  border-color: #58a6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.post-list h3 {
+  margin-top: 0;
+}
+
+.post-list h3 a {
+  text-decoration: none;
+}
+
+/* ===== Section headings get an accent bar ===== */
+.post-content h2 {
+  border-bottom: none;
+  border-left: 3px solid #58a6ff;
+  padding-left: 16px;
+  margin-top: 48px;
+}
+
+/* ===== Code blocks with subtle depth ===== */
+pre {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 16px !important;
+}
+
+pre code {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ===== Smooth link hover ===== */
+a:hover {
+  color: #79c0ff !important;
+  text-decoration: none;
+}
+
+/* ===== Images get rounded corners + subtle border ===== */
+.post-content img {
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  margin: 20px 0;
+}
+
+/* ===== Header gets a subtle bottom glow instead of flat line ===== */
+.site-header {
+  border-bottom: 1px solid #21262d;
+  box-shadow: 0 1px 20px rgba(88, 166, 255, 0.05);
+}
+
+/* ===== Body text gets a hair more breathing room ===== */
+.post-content {
+  letter-spacing: 0.1px;
+}
+
+/* ===== Blockquotes, if you ever use them ===== */
+blockquote {
+  border-left: 3px solid #58a6ff;
+  padding-left: 20px;
+  color: #8b949e;
+  font-style: italic;
+}
