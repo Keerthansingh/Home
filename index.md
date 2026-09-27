@@ -8,9 +8,9 @@ permalink: /
 
 I document CTF machines and security research here — real attempts, real mistakes, real exploit chains. Not polished tutorials.
 
-**[→ Browse Writeups](/home/writeups/)** for full machine walkthroughs
-**[→ Read the Blog](/home/blog/)** for general notes and deep dives
-**[→ About Me](/home/about/)** if you want to know who's behind this
+- [→ Browse Writeups](/home/writeups/)** for full machine walkthroughs
+- [→ Read the Blog](/home/blog/)** for general notes and deep dives
+- [→ About Me](/home/about/)** if you want to know who's behind this
 
 ---
 
