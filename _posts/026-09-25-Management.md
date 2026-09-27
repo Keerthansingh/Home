@@ -39,17 +39,17 @@ The scan revealed several open ports:
 
 ## 2. Enumeration & OpenAM RCE (CVE-2026-33439)
 
-Directory fuzzing on `https://management.htb/` didn't turn up hidden directories, but clicking the "Client login" button redirected me to `https://sso.management.htb/openam/XUI/#login/`.
+Directory fuzzing on `https://management.htb/` didn't find any hidden directories, but clicking the "Client login" button redirected me to `https://sso.management.htb/openam/XUI/#login/`.
 
-Inspecting the source code of the login page revealed the running software version: **OpenAM 16.0.5**.
+After Inspecting the source code of the login page revealed the running software version: **OpenAM 16.0.5**.
 
 ![OpenAM login page source revealing v=16.0.5](/ctf-writeups/assets/img/management-3.png)
 
-A search for this version pointed to **CVE-2026-33439**, a pre-authentication Remote Code Execution vulnerability caused by unsafe Java deserialization via the `jato.clientSession` parameter.
+Then I have searched for the vulnerabilities for the OpenAM version 16.0.5 and I found **CVE-2026-33439** which is  pre-authentication Remote Code Execution vulnerability caused by unsafe Java deserialization via the `jato.clientSession` parameter.
 
 ![CVE-2026-33439 vulnerability details](/ctf-writeups/assets/img/management-4.png)
 
-I found a public Python proof-of-concept exploit for this CVE.
+I found a public Python proof-of-concept exploit for this CVE : https://github.com/infernosalex/CVE-2026-33439-Python-PoC .
 
 ![CVE-2026-33439 Python PoC repository](/ctf-writeups/assets/img/management-5.png)
 
